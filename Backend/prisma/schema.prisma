@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum RoomType {
+  GROUP
+  PRIVATE
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  name String 
+  password String
+
+  participant Participant[]
+  messages Message[]
+
+  @@map("users")
+}
+model Room {
+  id        Int      @id @default(autoincrement())
+  name      String?  
+  type      RoomType @default(PRIVATE)
+  createdAt DateTime @default(now())
+  
+  messages     Message[]
+  participants Participant[] 
+
+  @@map("rooms")
+}
+
+model Message {
+  id Int @id @default(autoincrement())
+  text String @db.Text
+  senderId Int
+  roomId Int 
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [senderId], references: [id])
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Participant {
+  userId Int 
+  roomId Int 
+  role Role @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roomId])
+  @@map("participants")
+}
