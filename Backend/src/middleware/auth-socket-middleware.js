@@ -13,7 +13,8 @@ export const authSocketMiddleware = async (socket, next) => {
 
         const user = await userRepo.find({
             id: decoded.id,
-            email: decoded.email
+            email: decoded.email,
+            name: decoded.name
         })
         
         if (!user) {

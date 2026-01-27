@@ -1,4 +1,4 @@
-import userRepo from "../repositories/user-repo.js"; // Perlu Ganti
+import userRepo from "../repositories/user-repo.js"; 
 import jwt from "jsonwebtoken";
 
 export const authMiddleware = async (req, res, next) => {

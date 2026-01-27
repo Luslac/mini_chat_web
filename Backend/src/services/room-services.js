@@ -1,42 +1,48 @@
+import { prisma } from "../application/database.js";
 import participantsSocketRepo from "../repositories/participants-socket-repo.js";
 import roomSocketRepo from "../repositories/room-socket-repo.js";
 import userRepo from "../repositories/user-repo.js";
 import { ResponseError } from "../utils/response-error.js";
+import { isAlreadyAnAdmin, isIdAdmin } from "../utils/room-helper-function.js";
 
 
 const getOrCreatePrivateRoom = async (myId, friendId) => {
-    let room = await roomSocketRepo.find(
-        {
-            type: 'PRIVATE',
-            AND: [
-                {participants : { some : { userId : myId} } },
-                {participants : { some : { userId : friendId} } }
-            ]
-        },
-        {
-            include: { participants: true }
-        }
-    )
-
-    if (room) {
-        return room
-    }
-
-    room = await roomSocketRepo.create(
-        {
-            type: 'PRIVATE',
-            participants: {
-                create: [
-                    {userId: myId, role: 'MEMBER'},
-                    {userId: friendId, role: 'MEMBER'}
+    return prisma.$transaction( async (tx) => {
+        let room = await roomSocketRepo.find(
+            {
+                type: 'PRIVATE',
+                AND: [
+                    {participants : { some : { userId : myId} } },
+                    {participants : { some : { userId : friendId} } }
                 ]
+            },
+            {
+                include: { participants: true },
+                tx
             }
-        },
-        {
-            include: { participants: true }
+        )
+
+        if (room) {
+            return room
         }
-    )
-    return room 
+
+        room = await roomSocketRepo.create(
+            {
+                type: 'PRIVATE',
+                participants: {
+                    create: [
+                        {userId: myId, role: 'MEMBER'},
+                        {userId: friendId, role: 'MEMBER'}
+                    ]
+                }
+            },
+            {
+                include: { participants: true },
+                tx
+            }
+        )
+        return room 
+    })
 }
 
 const createGroupRooom = async (myId, groupName) => {
@@ -102,10 +108,67 @@ const addMembersToGroupRoom = async (myId, roomId, membersId = []) => {
         roomId: roomId,
         addedIds: newMembersId,
         invalidIds: membersId.filter(id => !validUserIds.includes(id)),
-        alreadyMember: existingMemberIds
+        alreadyMember: [...existingMemberIds]
     }
 }
 
+const leaveGroupRoom = async (myId, roomId) => {
+    return prisma.$transaction( async (tx) => {
+        const participant = await participantsSocketRepo.find(
+            { userId: parseInt(myId), roomId: parseInt(roomId) },
+            { include: { 
+                room: { select: { id: true, name: true } },
+                user: { select: { id: true, name: true } }
+            } },
+            tx
+        )
+        if (!participant) {
+            throw new ResponseError(404, 'Not a member of this room')
+        }
+    
+        const adminCount = await participantsSocketRepo.count(
+            { roomId: parseInt(roomId), role: 'ADMIN' },
+            tx
+        )
+        if (participant.role === 'ADMIN' && adminCount === 1) {
+            throw new ResponseError(400, 'Cannot leave: you are the last admin, make someone admin to leave')
+        }
+        await participantsSocketRepo.deleteParticipant(
+            { userId_roomId: { userId: parseInt(myId), roomId: parseInt(roomId) } },
+            tx
+        )
+    
+        return {
+            userId: participant.userId,
+            userName: participant.user.name,
+            roomId: participant.roomId,
+            roomName: participant.room.name        
+        }
+    })
+}
+
+const promoteNewAdmin = async (myId, friendId, roomId) => {
+    const participant = await participantsSocketRepo.find(
+        { userId: friendId, roomId: roomId },
+        { select: { userId: true } }
+    )
+    if (!participant) {
+        throw new ResponseError(404, 'Member to be promoted Not Found')
+    }
+
+    await isIdAdmin(myId, roomId)
+    await isAlreadyAnAdmin(friendId, roomId)
+
+    return participantsSocketRepo.update(
+        { userId_roomId: { userId: friendId, roomId: roomId } },
+        { role: "ADMIN" },
+        { include: { 
+            user: {select: { id: true, name: true} } 
+        }}
+    )
+}
+
 export default {
-    getOrCreatePrivateRoom, createGroupRooom, addMembersToGroupRoom
+    getOrCreatePrivateRoom, createGroupRooom, addMembersToGroupRoom,
+    leaveGroupRoom, promoteNewAdmin
 }

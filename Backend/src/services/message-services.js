@@ -24,7 +24,21 @@ const saveMessageText = async (roomId, senderId, text) => {
         }
     )
 }
+const loadMessageHistory = async (roomId, cursor) => {
+    const message = await messageSocketRepo.findMany(
+        { roomId: parseInt(roomId) },
+        {   take: 50,
+            cursor: cursor ? { id: parseInt(cursor) } : undefined,
+            skip: cursor ? 1 : 0,
+            orderBy: { createdAt: 'desc' }
+        }
+    )
 
+    return {
+        message,
+        nextCursor: message.length > 0 ? message[message.length - 1].id : null
+    }
+}
 export default {
-    saveMessageText
+    saveMessageText, loadMessageHistory
 }

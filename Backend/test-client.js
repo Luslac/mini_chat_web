@@ -50,13 +50,13 @@ const socket = io("http://localhost:3000", {
 
 // Event: Connect
 socket.on("connect", () => {
-    console.log(`✅ Connected! Mencoba membuat ROOM`);
+    console.log(`Connected! Mencoba membuat ROOM`);
     socket.emit('create room', "CUMAN EVOS M1");
 });
 
 // Event: Room Created
 socket.on('room created', (data) => {
-    console.log("🎉 Room berhasil dibuat!", data);
+    console.log("Room berhasil dibuat!", data);
     
     socket.emit('invite to group', data.roomId, [friendIdTarget.id])
     socket.emit('send message', {
@@ -72,19 +72,19 @@ socket.on('invite success', (data) => {
 
 // Event: Invite Error
 socket.on('invite error', (err) => {
-    console.error("❌ Invite Error (Validation):", err)
+    console.error("Invite Error (Validation):", err)
 })
 
 // Event: New Message
 socket.on('new message', (msg) => {
-    console.log("📩 Pesan masuk:", msg)
+    console.log("Pesan masuk:", msg)
 })
 
 // Event: Error handling (optional)
 socket.on("connect_error", (err) => {
-    console.error("❌ Connection error:", err.message)
+    console.error("Connection error:", err.message)
 })
 
 socket.on("disconnect", () => {
-    console.log("🔌 Disconnected from server")
+    console.log("Disconnected from server")
 })

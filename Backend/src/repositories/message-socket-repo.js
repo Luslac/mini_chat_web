@@ -1,28 +1,28 @@
 import { prisma } from "../application/database.js"
 
-const find = async (where, options = {}) => {
-    return await prisma.message.findFirst({
+const find = async (where, options = {}, tx = prisma) => {
+    return tx.message.findFirst({
         where,
         ...options
     })
 }
 
-const findMany = async (where, options = {}) => {
-    return await prisma.message.findMany({
+const findMany = async (where, options = {}, tx = prisma) => {
+    return tx.message.findMany({
         where,
         ...options
     })
 }
 
-const create = async (data, options = {}) => {
-    return await prisma.message.create({
+const create = async (data, options = {}, tx = prisma) => {
+    return tx.message.create({
         data,
         ...options
     })
 }
 
-const update = async (where, data, options = {}) => {
-    return await prisma.message.update({
+const update = async (where, data, options = {}, tx = prisma) => {
+    return tx.message.update({
         where,
         data,
         ...options
