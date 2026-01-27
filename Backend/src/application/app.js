@@ -36,11 +36,17 @@ io.on('connection', (socket) => {
     logger.info(`User Connected: ${socket.id}`)
 
     messageSocketHandlers.sendMessagesHandler(io, socket)
+    messageSocketHandlers.typingIndicatorHandler(io, socket)
+
+
+
+    // ROOM HANDLERS
     roomSocketHandlers.startPrivateRoomHandler(io, socket)
     roomSocketHandlers.createGroupRoomHandler(io, socket)
     roomSocketHandlers.addMembersToGroupHandlers(io, socket)
     roomSocketHandlers.leaveGroupHandlers(io, socket)
     roomSocketHandlers.promoteNewAdminHandlers(io, socket)
+
 
     socket.on('disconnect', () => {
         logger.info(`User Disconnected: ${socket.id}`)

@@ -18,6 +18,23 @@ const sendMessagesHandler = (io, socket) => {
     }))
 }
 
+const typingIndicatorHandler = (io, socket) => {
+    socket.on('typing start', messageSocketHandlers(socket, async (roomId) => {
+
+        socket.to(roomId.toString()).emit('typing...', {
+            senderName: socket.user.name,
+            senderId: socket.user.id,
+            roomId: roomId
+        })
+    })) 
+
+    socket.on('typing stop', messageSocketHandlers(socket, async (roomId) => {
+
+        socket.to(roomId.toString()).emit('typing stop', {
+            roomId: roomId
+        })
+    }))
+}
 export default {
-    sendMessagesHandler
+    sendMessagesHandler, typingIndicatorHandler
 }

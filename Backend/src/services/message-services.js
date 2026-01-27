@@ -42,3 +42,6 @@ const loadMessageHistory = async (roomId, cursor) => {
 export default {
     saveMessageText, loadMessageHistory
 }
+
+// List Up Coming Feature: 
+// 1. Delete Message, 2. Edit Message, 3. Typing Indicator
