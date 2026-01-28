@@ -13,6 +13,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MessageStatus {
+  SENT
+  READ
+}
+
 enum Role {
   ADMIN
   MEMBER
@@ -28,6 +33,8 @@ model User {
   email String @unique
   name String 
   password String
+  isOnline Boolean @default(false)
+  lastSeen DateTime @default(now())
 
   participant Participant[]
   messages Message[]
@@ -51,6 +58,7 @@ model Message {
   text String @db.Text
   senderId Int
   roomId Int 
+  status MessageStatus @default(SENT)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [senderId], references: [id])
