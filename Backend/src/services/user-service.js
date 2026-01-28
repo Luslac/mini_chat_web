@@ -4,6 +4,7 @@ import { checkExistingUser, getUserOrThrow, isPasswordValid } from "../utils/use
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import userRepo from "../repositories/user-repo.js";
+import { ResponseError } from "../utils/response-error.js";
 
 
 const registration = async (req) => {
@@ -39,6 +40,19 @@ const login = async (req) => {
     }
 }
 
+const getFriend = async (friendName) => {
+    if(!friendName) {
+        throw new ResponseError(400, 'Query "name" is required')
+    }
+    const friends = await userRepo.findMany(
+        { name: { contains: friendName, mode: 'insensitive' } }
+    )
+    if (!friends) {
+        throw new ResponseError(404, "friends not found")
+    }
+    return friends
+}
+
 export default {
-    registration, login
+    registration, login, getFriend
 }

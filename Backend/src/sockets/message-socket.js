@@ -12,6 +12,7 @@ const sendMessagesHandler = (io, socket) => {
             senderId: messageData.senderId,
             senderName: messageData.user.name,
             roomId: messageData.roomId,
+            messageId: messageData.id,
             createdAt: messageData.createdAt
         })
         console.log(`Msg saved in Room ${roomId}: ${text}`)
@@ -35,6 +36,34 @@ const typingIndicatorHandler = (io, socket) => {
         })
     }))
 }
+
+const deleteMessageHandler = (io, socket) => {
+    socket.on('delete message', messageSocketHandlers(socket, async (roomId, messageId) => {
+        const messageData = await messageServices.deleteMessage(roomId, socket.user.id, messageId)
+
+        io.to(messageData.roomId.toString()).emit('message deleted', {
+            messageId: messageData.id,
+            roomId: messageData.roomId,
+            senderId: messageData.senderId
+        })
+    }))
+}
+
+const editMessageHandler = (io, socket) => {
+    socket.on('edit message', messageSocketHandlers(socket, async (roomId, messageId, updateText) => {
+        const myId = socket.user.id
+        const updateData = await messageServices.editMessage({roomId, myId, messageId, updateText})
+
+        io.to(updateData.roomId.toString()).emit('message edited', {
+            messageId: updateData.id,
+            roomId: updateData.roomId,
+            senderId: updateData.senderId,
+            text: updateData.text
+        })
+    }))
+}
+
+
 export default {
-    sendMessagesHandler, typingIndicatorHandler
+    sendMessagesHandler, typingIndicatorHandler, deleteMessageHandler, editMessageHandler
 }

@@ -1,4 +1,6 @@
+import messageServices from "../services/message-services.js";
 import roomServices from "../services/room-services.js";
+import { ResponseError } from "../utils/response-error.js";
 import { roomSocketHandlers } from "../utils/socket-helper-function.js";
 
 
@@ -38,90 +40,26 @@ const createGroupRoomHandler = async (io, socket) => {
     }))
 }
 
+const joinRoomHandler = (io, socket) => {
+    socket.on('join room', roomSocketHandlers(socket, async (roomId) => {
 
-const addMembersToGroupHandlers = async (io, socket) => {
-    // anggap fe sudah menyiapkan tombol 'add all' ketika sudah memilih friendlist 
-    socket.on('invite to group', roomSocketHandlers(socket, async (roomId, membersIds) => {
-
-        if (!Array.isArray(membersIds) || membersIds.length === 0) {
-                return socket.emit('invite error', { 
-                    message: 'Invalid member IDs To add members' 
-                })
-            }
-        const myId = socket.user.id
-        const result = await roomServices.addMembersToGroupRoom(myId, roomId, membersIds)
-        socket.join()
-
-        io.to(roomId).emit('members added', {
-            count: result.countMembersAdd,
-            newMembers: result.addedIds
-        })
-
-        result.addedIds.forEach(userId => {
-            io.to(`user_${userId}`).emit('invited to group', {
-                roomId: roomId, 
-                invitedBy: myId,
-                inviterName: socket.user.name
-            })
-        })
-
-        socket.emit('invite success', {
-            roomId: result.roomId,
-            addedMembers: result.countMembersAdd,
-            membersData: result.addedIds
-        })
-        console.log(`Members Added: ${result.countMembersAdd}`)
-    }))
-}
-
-const leaveGroupHandlers = async (io, socket) => {
-    socket.on('leave group', roomSocketHandlers(socket, async (roomId) => {
-        const myId = socket.user.id
-        const roomIdInt = parseInt(roomId)
-        
-        if (isNaN(roomIdInt)) {
-            return socket.emit('roomError', { 
-                message: 'Invalid room ID' 
-            })
+        if (!roomId) {
+            throw new ResponseError(404, "Room Not Found")
         }
+        const roomString = roomId.toString()
+        socket.join(roomString)
+        console.log(`User ${socket.user.name} Berhasil Masuk Ke Dalam ROOM ${roomId}`)
 
-        const dataUser = await roomServices.leaveGroupRoom(myId, roomIdInt)
-        const roomIdString = roomIdInt.toString()
+        await messageServices.markStatusMessageAsRead(roomId, socket.user.id)
 
-        io.to(roomIdString).emit(`member leave group`, {
-            name: dataUser.userName,
-            roomName: dataUser.roomName,
-            leftAt: new Date()
-        })
-
-        socket.leave(roomIdString)
-        socket.emit('leave group success', {
-            name: dataUser.userName,
-            roomId: dataUser.roomId,
-            roomName: dataUser.roomName,
-            leftAt: new Date()
+        socket.to(roomId.toString()).emit('messages read', {
+            roomId: roomId,
+            readBy: socket.user.id
         })
     }))
 }
 
-const promoteNewAdminHandlers = async (io, socket) => {
-    socket.on('promote new admin', roomSocketHandlers(socket, async (friendId, roomId) => {
-
-        const myId = socket.user.id
-        const roomIdInt = parseInt(roomId)
-        const promote = await roomServices.promoteNewAdmin(myId, friendId, roomIdInt)
-
-        const roomIdString = roomIdInt.toString()
-        socket.emit('promote new admin success', {
-            userName: promote.user.name,
-            userId: promote.userId,
-            userRole: promote.role,
-            roomId: roomIdString
-        })
-    }))
-}
 
 export default {
-    startPrivateRoomHandler, leaveGroupHandlers, createGroupRoomHandler, addMembersToGroupHandlers,
-    promoteNewAdminHandlers
+    startPrivateRoomHandler, createGroupRoomHandler, joinRoomHandler
 }

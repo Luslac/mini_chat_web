@@ -29,6 +29,12 @@ const update = async (where, data, options = {}, tx = prisma) => {
     })
 }
 
+const updateMany = async (where, data) => {
+    return prisma.message.updateMany({
+        where,
+        data
+    })
+}
 export default {
-    find, findMany, create, update
+    find, findMany, create, update, updateMany
 }

@@ -1,4 +1,5 @@
 import messageSocketRepo from "../repositories/message-socket-repo.js";
+import { ResponseError } from "../utils/response-error.js";
 
 const saveMessageText = async (roomId, senderId, text) => {
     
@@ -24,7 +25,15 @@ const saveMessageText = async (roomId, senderId, text) => {
         }
     )
 }
-const loadMessageHistory = async (roomId, cursor) => {
+const loadMessageHistory = async (roomId, cursor, myId) => {
+    const isMember = await participantsSocketRepo.find({
+        roomId: parseInt(roomId),
+        userId: myId
+    });
+
+    if (!isMember) {
+        throw new ResponseError(401,"Unauthorized: You are not in this room");
+    }
     const message = await messageSocketRepo.findMany(
         { roomId: parseInt(roomId) },
         {   take: 50,
@@ -33,15 +42,58 @@ const loadMessageHistory = async (roomId, cursor) => {
             orderBy: { createdAt: 'desc' }
         }
     )
-
     return {
         message,
         nextCursor: message.length > 0 ? message[message.length - 1].id : null
     }
 }
+
+
+const deleteMessage = async (roomId, myId, messageId) => {
+    const message = await messageSocketRepo.find(
+        { roomId: roomId, senderId: myId, id: messageId },
+        { select: { id: true, roomId: true, senderId: true } }
+    )
+
+    if (!message) {
+        throw new ResponseError(404, "Message Not Found")
+    }
+
+    return message
+
+}
+
+const editMessage = async (data) => {
+    const {roomId, myId, messageId, updateText} = data
+
+    const message = await messageSocketRepo.find(
+        { roomId: roomId, senderId: myId, id: messageId },
+        { select: { id: true, roomId: true, senderId: true } }
+    )
+
+    if (!message) {
+        throw new ResponseError(404, "Message Not Found")
+    }
+
+    const updateMessage = await messageSocketRepo.update(
+        { roomId: roomId, senderId: myId, id: messageId },
+        { text: updateText},
+        { select: { id: true, roomId: true, senderId: true, text: true } }
+    )
+
+    return updateMessage
+}
+
+const markStatusMessageAsRead = async (roomId, myId) => {
+    return messageSocketRepo.updateMany(
+        { roomId: roomId, senderId: { not : myId}, status: { not : "READ"}},
+        { status: "READ"}
+    )
+    
+}
 export default {
-    saveMessageText, loadMessageHistory
+    saveMessageText, loadMessageHistory, deleteMessage, editMessage, markStatusMessageAsRead
 }
 
 // List Up Coming Feature: 
-// 1. Delete Message, 2. Edit Message, 3. Typing Indicator
+// 1. Delete Message, 2. Edit Message

@@ -38,6 +38,20 @@ const login = async (req, res, next) => {
     }
 }
 
+const getFriend = async (req, res, next) => {
+    try {
+        const friendName = req.query.name
+        const result = await userService.getFriend(friendName)
+        res.status(200).json({
+            success: true,
+            message: "Login success",
+            data: { result }
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 export default {
-    registration, login
+    registration, login, getFriend
 }

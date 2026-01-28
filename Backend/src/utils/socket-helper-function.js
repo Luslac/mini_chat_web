@@ -22,7 +22,25 @@ export const messageSocketHandlers = (socket, handler) => {
             await handler(...args)
         } catch (error) {
             if (error.status) {
-                socket.emit('roomError', {
+                socket.emit('messageError', {
+                    message: error.message,
+                    status: error.status
+                });
+            } else {
+                console.error("Socket Error:", error);
+                socket.emit('error', { message: "Internal Server Error" });
+            }
+        }
+    }
+}
+
+export const participantSocketHandlers = (socket, handler) => {
+    return async (...args) => {
+        try {
+            await handler(...args)
+        } catch (error) {
+            if (error.status) {
+                socket.emit('participantError', {
                     message: error.message,
                     status: error.status
                 });

@@ -4,8 +4,9 @@ const getHistoryMessage = async (req, res, next) => {
     try {
         const cursor  = req.query.cursor
         const roomId = req.params.roomId
+        const id = req.user.id
 
-        const result = await messageServices.loadMessageHistory(roomId, cursor)
+        const result = await messageServices.loadMessageHistory(roomId, cursor, id)
         
         res.status(200).json({
             success: true,
