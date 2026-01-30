@@ -1,5 +1,6 @@
 import messageSocketRepo from "../repositories/message-socket-repo.js";
 import { ResponseError } from "../utils/response-error.js";
+import participantsSocketRepo from "../repositories/participants-socket-repo.js";
 
 const saveMessageText = async (roomId, senderId, text) => {
     
@@ -51,7 +52,7 @@ const loadMessageHistory = async (roomId, cursor, myId) => {
 
 const deleteMessage = async (roomId, myId, messageId) => {
     const message = await messageSocketRepo.find(
-        { roomId: roomId, senderId: myId, id: messageId },
+        { roomId: parseInt(roomId), senderId: myId, id: messageId },
         { select: { id: true, roomId: true, senderId: true } }
     )
 

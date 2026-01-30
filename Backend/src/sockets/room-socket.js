@@ -4,7 +4,7 @@ import { ResponseError } from "../utils/response-error.js";
 import { roomSocketHandlers } from "../utils/socket-helper-function.js";
 
 
-const startPrivateRoomHandler = async (io, socket) => {
+const startPrivateRoomHandler =  (io, socket) => {
     socket.on('start private chat', roomSocketHandlers(socket, async (friendId) => {
         const myId = socket.user.id
         const room = await roomServices.getOrCreatePrivateRoom(myId, parseInt(friendId))
@@ -22,11 +22,12 @@ const startPrivateRoomHandler = async (io, socket) => {
 }
 
 
-const createGroupRoomHandler = async (io, socket) => {
+const createGroupRoomHandler =  (io, socket) => {
     socket.on('create room', roomSocketHandlers(socket, async (roomName) => {
+
         const myId = socket.user.id
         const room = await roomServices.createGroupRooom(myId, roomName)
-
+        console.log(`ERROR KAH??????????????`)
         const roomStringId = room.id.toString()
         socket.join(roomStringId)
 

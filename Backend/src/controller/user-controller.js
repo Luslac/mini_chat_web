@@ -42,10 +42,11 @@ const getFriend = async (req, res, next) => {
     try {
         const friendName = req.query.name
         const result = await userService.getFriend(friendName)
+        
         res.status(200).json({
             success: true,
             message: "Login success",
-            data: { result }
+            data: result
         })
     } catch (error) {
         next(error)

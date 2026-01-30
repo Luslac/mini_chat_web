@@ -84,8 +84,7 @@ const leaveGroupRoom = async (myId, roomId) => {
         return {
             userId: participant.userId,
             userName: participant.user.name,
-            roomId: participant.roomId,
-            roomName: participant.room.name        
+            roomId: participant.roomId      
         }
     })
 }

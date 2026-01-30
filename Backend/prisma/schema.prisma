@@ -59,6 +59,7 @@ model Message {
   senderId Int
   roomId Int 
   status MessageStatus @default(SENT)
+  isEdited Boolean @default(false)
   createdAt DateTime @default(now())
 
   user User @relation(fields: [senderId], references: [id])

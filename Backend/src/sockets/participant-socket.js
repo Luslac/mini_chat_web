@@ -2,7 +2,7 @@ import { participantSocketHandlers } from "../utils/socket-helper-function.js"
 import participantServices from "../services/participant-services.js"
 
 
-const addMembersToGroupHandlers = async (io, socket) => {
+const addMembersToGroupHandlers = (io, socket) => {
     socket.on('invite to group', participantSocketHandlers(socket, async (roomId, membersIds) => {
 
         if (!Array.isArray(membersIds) || membersIds.length === 0) {
@@ -36,7 +36,7 @@ const addMembersToGroupHandlers = async (io, socket) => {
     }))
 }
 
-const leaveGroupHandlers = async (io, socket) => {
+const leaveGroupHandlers = (io, socket) => {
     socket.on('leave group', participantSocketHandlers(socket, async (roomId) => {
         const myId = socket.user.id
         const roomIdInt = parseInt(roomId)
@@ -60,13 +60,12 @@ const leaveGroupHandlers = async (io, socket) => {
         socket.emit('leave group success', {
             name: dataUser.userName,
             roomId: dataUser.roomId,
-            roomName: dataUser.roomName,
             leftAt: new Date()
         })
     }))
 }
 
-const promoteNewAdminHandlers = async (io, socket) => {
+const promoteNewAdminHandlers = (io, socket) => {
     socket.on('promote new admin', participantSocketHandlers(socket, async (friendId, roomId) => {
 
         const myId = socket.user.id

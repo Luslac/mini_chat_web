@@ -45,9 +45,10 @@ const getFriend = async (friendName) => {
         throw new ResponseError(400, 'Query "name" is required')
     }
     const friends = await userRepo.findMany(
-        { name: { contains: friendName, mode: 'insensitive' } }
+        { name: { contains: friendName } },
+        { select : {id: true, email: true, name: true, isOnline: true} }
     )
-    if (!friends) {
+    if (friends.length === 0) {
         throw new ResponseError(404, "friends not found")
     }
     return friends

@@ -9,7 +9,7 @@ import { logger } from "./logging.js";
 
 import { authSocketMiddleware } from "../middleware/auth-socket-middleware.js";
 import messageSocketHandler from "../sockets/message-socket.js";
-import roomSocketHandlers from "../sockets/room-socket.js";
+import roomSocketHandler from "../sockets/room-socket.js"
 import participantSocketHandler from "../sockets/participant-socket.js";
 import { userRouter } from "../route/userRouter.js";
 import userRepo from "../repositories/user-repo.js";
@@ -37,6 +37,25 @@ const timers = new Map()
 
 io.on('connection', async (socket) => {
     logger.info(`User Connected: ${socket.id}`)
+
+    // Message Handlers
+    messageSocketHandler.sendMessagesHandler(io, socket)
+    messageSocketHandler.typingIndicatorHandler(io, socket)
+    messageSocketHandler.deleteMessageHandler(io, socket)
+    messageSocketHandler.editMessageHandler(io, socket)
+
+
+    // ROOM HANDLERSconsole.log("🛠️ DEBUG CHECK:", roomSocket); 
+    console.log("🛠️ DEBUG FUNGSI:", roomSocketHandler.createGroupRoomHandler)
+    roomSocketHandler.startPrivateRoomHandler(io, socket)
+    roomSocketHandler.createGroupRoomHandler(io, socket)
+    roomSocketHandler.joinRoomHandler(io, socket)
+
+    // Participants Handlers
+    participantSocketHandler.addMembersToGroupHandlers(io, socket)
+    participantSocketHandler.leaveGroupHandlers(io, socket)
+    participantSocketHandler.promoteNewAdminHandlers(io, socket)
+
     const userId = socket.user.id
 
     if (timers.has(userId)) {
@@ -54,25 +73,7 @@ io.on('connection', async (socket) => {
         userId: userId,
         status: 'ONLINE'
     })
-
-    // Message Handlers
-    messageSocketHandler.sendMessagesHandler(io, socket)
-    messageSocketHandler.typingIndicatorHandler(io, socket)
-    messageSocketHandler.deleteMessageHandler(io, socket)
-    messageSocketHandler.editMessageHandler(io, socket)
-
-
-    // ROOM HANDLERS
-    roomSocketHandlers.startPrivateRoomHandler(io, socket)
-    roomSocketHandlers.createGroupRoomHandler(io, socket)
-    roomSocketHandlers.joinRoomHandler(io, socket)
-
-    // Participants Handlers
-    participantSocketHandler.addMembersToGroupHandlers(io, socket)
-    participantSocketHandler.leaveGroupHandlers(io, socket)
-    participantSocketHandler.promoteNewAdminHandlers(io, socket)
-
-
+    
     socket.on('disconnect', () => {
         logger.info(`User Disconnected: ${socket.id}`)
 

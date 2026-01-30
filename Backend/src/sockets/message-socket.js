@@ -39,12 +39,11 @@ const typingIndicatorHandler = (io, socket) => {
 
 const deleteMessageHandler = (io, socket) => {
     socket.on('delete message', messageSocketHandlers(socket, async (roomId, messageId) => {
-        const messageData = await messageServices.deleteMessage(roomId, socket.user.id, messageId)
+        const messageData = await messageServices.deleteMessage(roomId, socket.user.id, parseInt(messageId))
 
         io.to(messageData.roomId.toString()).emit('message deleted', {
             messageId: messageData.id,
-            roomId: messageData.roomId,
-            senderId: messageData.senderId
+            roomId: messageData.roomId
         })
     }))
 }
@@ -58,6 +57,7 @@ const editMessageHandler = (io, socket) => {
             messageId: updateData.id,
             roomId: updateData.roomId,
             senderId: updateData.senderId,
+            isEdited: true,
             text: updateData.text
         })
     }))
